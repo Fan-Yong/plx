@@ -72,6 +72,7 @@ BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON1, &Ctest1Dlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, &Ctest1Dlg::OnBnClickedButton2)
 	ON_BN_CLICKED(IDC_BUTTON3, &Ctest1Dlg::OnBnClickedButton3)
+	ON_BN_CLICKED(IDC_BUTTON4, &Ctest1Dlg::OnBnClickedButton4)
 END_MESSAGE_MAP()
 
 
@@ -241,11 +242,9 @@ void Ctest1Dlg::OnBnClickedButton2()
 
 void Ctest1Dlg::OnBnClickedButton3()
 {
-	CString str;
-	PLX_DEVICE_OBJECT Device;
+	CString str;	
 	PLX_STATUS rc;
-	PLX_DMA_PARAMS DmaParams;	
-	PLX_PHYSICAL_MEM PciBuffer;
+	
 	
 
 	rc =
@@ -276,14 +275,20 @@ void Ctest1Dlg::OnBnClickedButton3()
 	}
 	MessageBox(_T("建立通道成功"));
 
-	PlxPci_DmaTransferBlock(
-		&Device,
-		0, // Channel 0
-		&DmaParams,
-		0 // Don’t wait for DMA completion
-	);
+	
+
+	
+}
 
 
+void Ctest1Dlg::OnBnClickedButton4()
+{
+	
+
+	PLX_STATUS rc;
+	U8  pBuffer;
+	PLX_DMA_PARAMS DmaParams;
+	
 	/*typedef struct _PLX_DMA_PARAMS
 	{
 		U64 UserVa;                     // User buffer virtual address
@@ -300,22 +305,29 @@ void Ctest1Dlg::OnBnClickedButton3()
 	} PLX_DMA_PARAMS;*/
 
 
-	PlxPci_CommonBufferProperties(
-		&Device,
-		&PciBuffer
-	);
+	
+	// Allocate a 500k buffer
+	pBuffer =U8(malloc(32));
+	// Clear DMA parameters
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
-	// Fill in DMA transfer parameters
-	DmaParams.ByteCount = 0x1000;
-	
-	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
-	DmaParams.LocalAddr = 0x0;
-	
-	//DmaParams.AddrSource = PciBuffer.PhysicalAddr;
-	//DmaParams.AddrDest = PciBuffer.PhysicalAddr + 0x5000;
-	
+	// Setup DMA parameters (9000 DMA)
+	DmaParams.UserVa = (PLX_UINT_PTR)pBuffer;
+	DmaParams.ByteCount = (4);
+	if (Device.Key.PlxFamily == PLX_FAMILY_BRIDGE_P2L)
+	{	
+		
+		// 9000/8311 DMA
+		DmaParams.LocalAddr = 0x0;
+		DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
+	}
+	else
+	{
+		// 8000 DMA
+		DmaParams.PciAddr = 0x1F000000;
+		DmaParams.Direction = PLX_DMA_PCI_TO_USER;
+	}
 	rc =
-		PlxPci_DmaTransferBlock(
+		PlxPci_DmaTransferUserBuffer(
 			&Device,
 			0, // Channel 0
 			&DmaParams, // DMA transfer parameters
@@ -326,13 +338,9 @@ void Ctest1Dlg::OnBnClickedButton3()
 		if (rc == ApiWaitTimeout){
 			MessageBox(_T("Timed out waiting for DMA completion"));
 		}
-			
-		else{
-			MessageBox(_T("ERROR - Unable to perform DMA transfer"));
+		else {
+			MessageBox(_T(" ERROR - Unable to perform DMA transfer"));
 		}
-			
-		return;
 	}
-	MessageBox(_T("OK"));
-	//https://blog.csdn.net/u014626607/article/details/93895380
+	MessageBox(_T(" OK"));
 }

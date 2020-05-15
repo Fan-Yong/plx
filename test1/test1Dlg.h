@@ -35,8 +35,10 @@ public:
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
 	PLX_DEVICE_KEY PD_9056;
+	PLX_DEVICE_OBJECT Device;
 	CEdit DL;
 	//CButton iii;
 	CEdit iii;
-	afx_msg void OnBnClickedButton3();
+	afx_msg void OnBnClickedButton3();	
+	afx_msg void OnBnClickedButton4();
 };
