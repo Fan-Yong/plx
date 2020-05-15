@@ -215,7 +215,7 @@ void Ctest1Dlg::OnBnClickedButton2()
 		iii.SetWindowTextW(s);
 		s1.Format(_T("%x"), DeviceKey.DeviceId);
 
-		if (s1=="1901") {
+		if (s1=="9056") {
 
 			PD_9056 = DeviceKey;
 			MessageBox(s1);
@@ -242,7 +242,97 @@ void Ctest1Dlg::OnBnClickedButton2()
 void Ctest1Dlg::OnBnClickedButton3()
 {
 	CString str;
-	str.Format(_T("%x"), PD_9056.DeviceId);
+	PLX_DEVICE_OBJECT Device;
+	PLX_STATUS rc;
+	PLX_DMA_PARAMS DmaParams;	
+	PLX_PHYSICAL_MEM PciBuffer;
+	
+
+	rc =
+		PlxPci_DeviceOpen(
+			&PD_9056,
+			&Device
+		);
+	if (rc != ApiSuccess)
+	{
+		MessageBox(_T("未找到设备"));
+		return;
+		
+	}
+	
+	str.Format(_T("%x"), Device.Key.DeviceId);
 	MessageBox(str);
-	// TODO: 在此添加控件通知处理程序代码
+
+	rc = PlxPci_DmaChannelOpen(
+		&Device,
+		0, // Channel 0
+		NULL // Do not modify current DMA properties
+	);
+	if (rc != PLX_STATUS_OK){
+		str.Format(_T("%d"), rc);
+		//MessageBox(str);
+		MessageBox(_T("建立通道失败"));
+		return;
+	}
+	MessageBox(_T("建立通道成功"));
+
+	PlxPci_DmaTransferBlock(
+		&Device,
+		0, // Channel 0
+		&DmaParams,
+		0 // Don’t wait for DMA completion
+	);
+
+
+	/*typedef struct _PLX_DMA_PARAMS
+	{
+		U64 UserVa;                     // User buffer virtual address
+		U64 AddrSource;                 // Source address      (8000 DMA)
+		U64 AddrDest;                   // Destination address (8000 DMA)
+		U64 PciAddr;                    // PCI address         (9000 DMA)
+		U32 LocalAddr;                  // Local bus address   (9000 DMA)
+		U32 ByteCount;                  // Number of bytes to transfer
+		U8  Direction;                  // Direction of transfer (Local<->PCI, User<->PCI) (9000 DMA)
+		U8  bConstAddrSrc : 1;         // Constant source PCI address?      (8000 DMA)
+		U8  bConstAddrDest : 1;         // Constant destination PCI address? (8000 DMA)
+		U8  bForceFlush : 1;         // Force DMA to flush write on final descriptor (8000 DMA)
+		U8  bIgnoreBlockInt : 1;         // For block mode only, do not enable DMA done interrupt
+	} PLX_DMA_PARAMS;*/
+
+
+	PlxPci_CommonBufferProperties(
+		&Device,
+		&PciBuffer
+	);
+	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
+	// Fill in DMA transfer parameters
+	DmaParams.ByteCount = 0x1000;
+	
+	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
+	DmaParams.LocalAddr = 0x0;
+	
+	//DmaParams.AddrSource = PciBuffer.PhysicalAddr;
+	//DmaParams.AddrDest = PciBuffer.PhysicalAddr + 0x5000;
+	
+	rc =
+		PlxPci_DmaTransferBlock(
+			&Device,
+			0, // Channel 0
+			&DmaParams, // DMA transfer parameters
+			(3 * 1000) // Specify time to wait for DMA completion
+		);
+	if (rc != ApiSuccess)
+	{
+		if (rc == ApiWaitTimeout){
+			MessageBox(_T("Timed out waiting for DMA completion"));
+		}
+			
+		else{
+			MessageBox(_T("ERROR - Unable to perform DMA transfer"));
+		}
+			
+		return;
+	}
+	MessageBox(_T("OK"));
+	//https://blog.csdn.net/u014626607/article/details/93895380
 }
