@@ -284,7 +284,7 @@ void Ctest1Dlg::OnBnClickedButton3()
 void Ctest1Dlg::OnBnClickedButton4()
 {
 	
-
+	CString str;
 	PLX_STATUS rc;
 	U8  pBuffer;
 	PLX_DMA_PARAMS DmaParams;
@@ -307,32 +307,30 @@ void Ctest1Dlg::OnBnClickedButton4()
 
 	
 	// Allocate a 500k buffer
-	pBuffer =U8(malloc(32));
+	pBuffer =U8(malloc(500 * 1024));
 	// Clear DMA parameters
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 	// Setup DMA parameters (9000 DMA)
 	DmaParams.UserVa = (PLX_UINT_PTR)pBuffer;
-	DmaParams.ByteCount = (4);
-	if (Device.Key.PlxFamily == PLX_FAMILY_BRIDGE_P2L)
-	{	
+	DmaParams.ByteCount = (500 * 1024);
+
+	 
+
+	 
 		
-		// 9000/8311 DMA
-		DmaParams.LocalAddr = 0x0;
-		DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
-	}
-	else
-	{
-		// 8000 DMA
-		DmaParams.PciAddr = 0x1F000000;
-		DmaParams.Direction = PLX_DMA_PCI_TO_USER;
-	}
-	rc =
-		PlxPci_DmaTransferUserBuffer(
+	// 9000/8311 DMA
+	DmaParams.LocalAddr = 0x0;
+	DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
+	 
+	rc =PlxPci_DmaTransferUserBuffer(
 			&Device,
 			0, // Channel 0
 			&DmaParams, // DMA transfer parameters
 			(3 * 1000) // Specify time to wait for DMA completion
 		);
+
+	str.Format(_T("%d"), rc);
+	MessageBox(str);
 	if (rc != ApiSuccess)
 	{
 		if (rc == ApiWaitTimeout){

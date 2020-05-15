@@ -1,5 +1,5 @@
 ﻿  test1Dlg.cpp
-C:\Users\GaoZhen\source\repos\test1\test1Dlg.cpp(310,24): warning C4302: “<function-style-cast>”: 从“void *”到“U8”截断
+C:\Users\GaoZhen\source\repos\test1\test1Dlg.cpp(310,32): warning C4302: “<function-style-cast>”: 从“void *”到“U8”截断
   正在生成代码
   1 of 196 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
