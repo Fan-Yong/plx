@@ -284,26 +284,12 @@ void Ctest1Dlg::OnBnClickedButton3()
 void Ctest1Dlg::OnBnClickedButton4()
 {
 	
-	CString str;
+	/*CString str;
 	PLX_STATUS rc;
 	U8  pBuffer;
 	PLX_DMA_PARAMS DmaParams;
 	
-	/*typedef struct _PLX_DMA_PARAMS
-	{
-		U64 UserVa;                     // User buffer virtual address
-		U64 AddrSource;                 // Source address      (8000 DMA)
-		U64 AddrDest;                   // Destination address (8000 DMA)
-		U64 PciAddr;                    // PCI address         (9000 DMA)
-		U32 LocalAddr;                  // Local bus address   (9000 DMA)
-		U32 ByteCount;                  // Number of bytes to transfer
-		U8  Direction;                  // Direction of transfer (Local<->PCI, User<->PCI) (9000 DMA)
-		U8  bConstAddrSrc : 1;         // Constant source PCI address?      (8000 DMA)
-		U8  bConstAddrDest : 1;         // Constant destination PCI address? (8000 DMA)
-		U8  bForceFlush : 1;         // Force DMA to flush write on final descriptor (8000 DMA)
-		U8  bIgnoreBlockInt : 1;         // For block mode only, do not enable DMA done interrupt
-	} PLX_DMA_PARAMS;*/
-
+	
 
 	
 	// Allocate a 500k buffer
@@ -311,7 +297,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 	// Clear DMA parameters
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 	// Setup DMA parameters (9000 DMA)
-	DmaParams.UserVa = (PLX_UINT_PTR)pBuffer;
+	DmaParams.UserVa = pBuffer;
 	DmaParams.ByteCount = (500 * 1024);
 
 	 
@@ -340,5 +326,42 @@ void Ctest1Dlg::OnBnClickedButton4()
 			MessageBox(_T(" ERROR - Unable to perform DMA transfer"));
 		}
 	}
-	MessageBox(_T(" OK"));
+	MessageBox(_T(" OK"));*/
+	CString str;
+	PLX_STATUS rc;
+	PLX_DMA_PARAMS DmaParams;
+	PLX_PHYSICAL_MEM PciBuffer;
+	// Get Common buffer information
+	PlxPci_CommonBufferProperties(
+		&Device,
+		&PciBuffer
+	);
+	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
+	// Fill in DMA transfer parameters
+	DmaParams.ByteCount = 0x1000;
+	
+	// 9000/8311 DMA
+	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
+	DmaParams.LocalAddr = 0x0;
+	DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
+	
+	rc =
+		PlxPci_DmaTransferBlock(
+			&Device,
+			0, // Channel 0
+			&DmaParams, // DMA transfer parameters
+			(3 * 1000) // Specify time to wait for DMA completion
+		);
+	if (rc != PLX_STATUS_OK)
+	{
+		if (rc == ApiWaitTimeout) {
+			MessageBox(_T("Timed out waiting for DMA completion"));
+		}
+		else {
+			MessageBox(_T(" ERROR - Unable to perform DMA transfer"));
+		}
+	}
+	str.Format(_T("%d"), rc);
+	MessageBox(str);
+
 }
