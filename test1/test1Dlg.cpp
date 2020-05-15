@@ -7,7 +7,7 @@
 #include "test1.h"
 #include "test1Dlg.h"
 #include "afxdialogex.h"
-#include "PlxApi.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -71,6 +71,7 @@ BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON1, &Ctest1Dlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, &Ctest1Dlg::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_BUTTON3, &Ctest1Dlg::OnBnClickedButton3)
 END_MESSAGE_MAP()
 
 
@@ -189,6 +190,8 @@ void Ctest1Dlg::OnBnClickedButton2()
 	// Clear key structure to find first device
 	CString str;
 	CString s;
+	CString s1;
+	
 	s = "";
 	memset(&DeviceKey, PCI_FIELD_IGNORE, sizeof(PLX_DEVICE_KEY));
 	rc =
@@ -201,22 +204,25 @@ void Ctest1Dlg::OnBnClickedButton2()
 		// ERROR – Unable to locate matching device
 		MessageBox(TEXT("Unable to locate matching device"));
 	}
-	else {
-		CString str;
-		str.Format(_T("设备id为：%d"), DeviceKey.DeviceId);
-		
-		MessageBox(str);
 	}*/
 	int i = 0;
 
 	while (rc == PLX_STATUS_OK) {
 		
 		
-		str.Format(_T("%d,\r\n"), DeviceKey.DeviceId);
+		str.Format(_T("%x-%x,"), DeviceKey.DeviceId, DeviceKey.VendorId);
 		s.Append(str);
-
 		iii.SetWindowTextW(s);
-		//MessageBox(str);
+		s1.Format(_T("%x"), DeviceKey.DeviceId);
+
+		if (s1=="1901") {
+
+			PD_9056 = DeviceKey;
+			MessageBox(s1);
+		}
+
+		
+		
 		memset(&DeviceKey, PCI_FIELD_IGNORE, sizeof(PLX_DEVICE_KEY));
 		i++;
 		rc =
@@ -225,10 +231,18 @@ void Ctest1Dlg::OnBnClickedButton2()
 				i // Select 1st device matching criteria
 			);
 
-
 	}
 
 
 
 	
+}
+
+
+void Ctest1Dlg::OnBnClickedButton3()
+{
+	CString str;
+	str.Format(_T("%x"), PD_9056.DeviceId);
+	MessageBox(str);
+	// TODO: 在此添加控件通知处理程序代码
 }

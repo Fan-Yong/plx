@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include "PlxApi.h"
 
 // Ctest1Dlg 对话框
 class Ctest1Dlg : public CDialogEx
@@ -34,7 +34,9 @@ protected:
 public:
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
+	PLX_DEVICE_KEY PD_9056;
 	CEdit DL;
 	//CButton iii;
 	CEdit iii;
+	afx_msg void OnBnClickedButton3();
 };
