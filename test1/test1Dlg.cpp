@@ -369,12 +369,13 @@ void Ctest1Dlg::OnBnClickedButton4()
 	
 	
 	// Allocate a 500k buffer
-	pBuffer =(U8*) malloc(500 * 1024);
+	pBuffer =(U8*) malloc(4);
+	*pBuffer = 0xFFFF;
 	// Clear DMA parameters
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 	// Setup DMA parameters (9000 DMA)
 	DmaParams.UserVa = (PLX_UINT_PTR)pBuffer;
-	DmaParams.ByteCount = (500 * 1024);
+	DmaParams.ByteCount = (4);
 	
 	// 9000/8311 DMA
 	DmaParams.LocalAddr = 0x0;
@@ -385,7 +386,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 			&Device,
 			0, // Channel 0
 			&DmaParams, // DMA transfer parameters
-			(3 * 1000) // Specify time to wait for DMA completion
+			(3 * 10000) // Specify time to wait for DMA completion
 		);
 
 	if (rc != PLX_STATUS_OK)
