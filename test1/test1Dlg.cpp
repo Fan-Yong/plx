@@ -326,7 +326,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 			MessageBox(_T(" ERROR - Unable to perform DMA transfer"));
 		}
 	}
-	MessageBox(_T(" OK"));*/
+	MessageBox(_T(" OK"));
 	CString str;
 	PLX_STATUS rc;
 	PLX_DMA_PARAMS DmaParams;
@@ -350,8 +350,44 @@ void Ctest1Dlg::OnBnClickedButton4()
 			&Device,
 			0, // Channel 0
 			&DmaParams, // DMA transfer parameters
+			(1 * 60) // Specify time to wait for DMA completion
+		);
+	if (rc != PLX_STATUS_OK)
+	{
+		if (rc == ApiWaitTimeout) {
+			MessageBox(_T("Timed out waiting for DMA completion"));
+		}
+		else {
+			MessageBox(_T(" ERROR - Unable to perform DMA transfer"));
+		}
+	}*/
+
+	CString str;
+	PLX_STATUS rc;
+	U8* pBuffer;
+	PLX_DMA_PARAMS DmaParams;
+	
+	
+	// Allocate a 500k buffer
+	pBuffer =(U8*) malloc(500 * 1024);
+	// Clear DMA parameters
+	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
+	// Setup DMA parameters (9000 DMA)
+	DmaParams.UserVa = (PLX_UINT_PTR)pBuffer;
+	DmaParams.ByteCount = (500 * 1024);
+	
+	// 9000/8311 DMA
+	DmaParams.LocalAddr = 0x0;
+	DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
+	
+	rc =
+		PlxPci_DmaTransferUserBuffer(
+			&Device,
+			0, // Channel 0
+			&DmaParams, // DMA transfer parameters
 			(3 * 1000) // Specify time to wait for DMA completion
 		);
+
 	if (rc != PLX_STATUS_OK)
 	{
 		if (rc == ApiWaitTimeout) {
@@ -363,5 +399,6 @@ void Ctest1Dlg::OnBnClickedButton4()
 	}
 	str.Format(_T("%d"), rc);
 	MessageBox(str);
+	 
 
 }
