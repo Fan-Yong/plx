@@ -63,6 +63,7 @@ void Ctest1Dlg::DoDataExchange(CDataExchange* pDX)
 	//DDX_Control(pDX, IDC_EDIT1, DL);
 	//DDX_Control(pDX, IDC_BUTTON1, iii);
 	DDX_Control(pDX, IDC_EDIT3, iii);
+	DDX_Control(pDX, IDC_EDIT1, bbb);
 }
 
 BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
@@ -73,6 +74,7 @@ BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON2, &Ctest1Dlg::OnBnClickedButton2)
 	ON_BN_CLICKED(IDC_BUTTON3, &Ctest1Dlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &Ctest1Dlg::OnBnClickedButton4)
+	ON_BN_CLICKED(IDC_BUTTON6, &Ctest1Dlg::OnBnClickedButton6)
 END_MESSAGE_MAP()
 
 
@@ -370,7 +372,8 @@ void Ctest1Dlg::OnBnClickedButton4()
 	
 	// Allocate a 500k buffer
 	pBuffer =(U8*) malloc(4);
-	*pBuffer = 0xFFFF;
+	INT32 i = 0xAAAAAAAA;
+	memcpy(pBuffer, &i, 4);
 	// Clear DMA parameters
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 	// Setup DMA parameters (9000 DMA)
@@ -388,7 +391,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 			&DmaParams, // DMA transfer parameters
 			(3 * 10000) // Specify time to wait for DMA completion
 		);
-
+	free(pBuffer);
 	if (rc != PLX_STATUS_OK)
 	{
 		if (rc == ApiWaitTimeout) {
@@ -401,5 +404,19 @@ void Ctest1Dlg::OnBnClickedButton4()
 	str.Format(_T("%d"), rc);
 	MessageBox(str);
 	 
+
+}
+
+
+void Ctest1Dlg::OnBnClickedButton6()
+{
+	
+	/*CString s;
+	CString s1;
+	bbb.GetWindowTextW(s);
+	INT32 i  ;
+	
+	(int)s1.Format(_T("%x"),s);
+	MessageBox(s);*/
 
 }
