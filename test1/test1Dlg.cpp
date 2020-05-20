@@ -75,7 +75,11 @@ BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON3, &Ctest1Dlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &Ctest1Dlg::OnBnClickedButton4)
 	ON_BN_CLICKED(IDC_BUTTON6, &Ctest1Dlg::OnBnClickedButton6)
+	ON_BN_CLICKED(IDC_BUTTON5, &Ctest1Dlg::OnBnClickedButton5)
 END_MESSAGE_MAP()
+
+
+
 
 
 // Ctest1Dlg 消息处理程序
@@ -222,9 +226,10 @@ void Ctest1Dlg::OnBnClickedButton2()
 
 			PD_9056 = DeviceKey;
 			MessageBox(s1);
+			return ;
 		}
 
-		
+		 
 		
 		memset(&DeviceKey, PCI_FIELD_IGNORE, sizeof(PLX_DEVICE_KEY));
 		i++;
@@ -372,8 +377,18 @@ void Ctest1Dlg::OnBnClickedButton4()
 	
 	// Allocate a 500k buffer
 	pBuffer =(U8*) malloc(4);
-	INT32 i = 0xAAAAAAAA;
-	memcpy(pBuffer, &i, 4);
+	
+
+	//以16进制形式读取ediit数据
+	CString s;
+	bbb.GetWindowTextW(s);
+	U32 nValude;
+	const char* sc = CStringA(s);
+	sscanf_s(sc, "%x", &nValude);
+
+
+
+	memcpy(pBuffer, &nValude, 4);
 	// Clear DMA parameters
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 	// Setup DMA parameters (9000 DMA)
@@ -411,12 +426,33 @@ void Ctest1Dlg::OnBnClickedButton4()
 void Ctest1Dlg::OnBnClickedButton6()
 {
 	
-	/*CString s;
-	CString s1;
+	 CString s;	
 	bbb.GetWindowTextW(s);
-	INT32 i  ;
-	
-	(int)s1.Format(_T("%x"),s);
-	MessageBox(s);*/
+	U32 nValude;
+	const char* sc = CStringA(s);
+	sscanf_s(sc, "%x", &nValude);
 
+	 
+	
+	s.Format(_T("%x"), nValude);
+	MessageBox(s);    //显示输入值对应的10进制 
+
+}
+
+
+void Ctest1Dlg::OnBnClickedButton5()
+{
+	CString s;
+	U32* p;
+	int address = 0xdf500000;
+	memcpy(&p, &address, 4);
+	MessageBox(s);
+
+	address = 0xdf600000;
+	memcpy(&p, &address, 4);
+	s.Format(_T("%x"), *p);
+	s.Format(_T("0xdf600000数据：%x"), *p);
+
+
+	
 }

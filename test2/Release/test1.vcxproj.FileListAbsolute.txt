@@ -1,0 +1,2 @@
+C:\Users\GaoZhen\source\repos\test1\Release\test1.exe
+C:\Users\GaoZhen\source\repos\test2\Release\test1.exe
