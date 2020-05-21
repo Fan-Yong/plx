@@ -62,7 +62,7 @@ void Ctest1Dlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	//DDX_Control(pDX, IDC_EDIT1, DL);
 	//DDX_Control(pDX, IDC_BUTTON1, iii);
-	DDX_Control(pDX, IDC_EDIT3, iii);
+	//DDX_Control(pDX, IDC_EDIT3, iii);
 	DDX_Control(pDX, IDC_EDIT1, bbb);
 }
 
@@ -75,7 +75,7 @@ BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON3, &Ctest1Dlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &Ctest1Dlg::OnBnClickedButton4)
 	ON_BN_CLICKED(IDC_BUTTON6, &Ctest1Dlg::OnBnClickedButton6)
-	ON_BN_CLICKED(IDC_BUTTON5, &Ctest1Dlg::OnBnClickedButton5)
+	//ON_BN_CLICKED(IDC_BUTTON5, &Ctest1Dlg::OnBnClickedButton5)
 	ON_BN_CLICKED(IDC_BUTTON7, &Ctest1Dlg::OnBnClickedButton7)
 END_MESSAGE_MAP()
 
@@ -115,7 +115,7 @@ BOOL Ctest1Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
-	iii.SetWindowTextW(_T(""));
+	//iii.SetWindowTextW(_T(""));
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -193,67 +193,48 @@ void Ctest1Dlg::OnBnClickedButton1()
 
 void Ctest1Dlg::OnBnClickedButton2()
 {
-	PLX_STATUS rc;	
-	// Clear key structure to find first device
-	CString str;
-	CString s;
+	PLX_STATUS rc;		
+	CString str;	
 	CString s1;
 	
-	s = "";
-	memset(&DeviceKey, PCI_FIELD_IGNORE, sizeof(PLX_DEVICE_KEY));
+	
+	memset(&PD_9056, PCI_FIELD_IGNORE, sizeof(PD_9056));
 	rc =
 		PlxPci_DeviceFind(
-			&DeviceKey,
+			&PD_9056,
 			0 // Select 1st device matching criteria
 		);
-	/*if (rc != PLX_STATUS_OK)
+	if (rc != PLX_STATUS_OK)
 	{
 		// ERROR – Unable to locate matching device
 		MessageBox(TEXT("Unable to locate matching device"));
+		return;
 	}
-	}*/
+	
 	int i = 0;
+	while (rc == PLX_STATUS_OK) {		
+		s1.Format(_T("%x"), PD_9056.DeviceId);
 
-	while (rc == PLX_STATUS_OK) {
-		
-		
-		str.Format(_T("%x-%x,"), DeviceKey.DeviceId, DeviceKey.VendorId);
-		s.Append(str);
-		iii.SetWindowTextW(s);
-		s1.Format(_T("%x"), DeviceKey.DeviceId);
-
-		if (s1=="9056") {
-
-			PD_9056 = DeviceKey;
-			MessageBox(s1);
+		if (s1=="9056") {			
+			MessageBox(_T("找到9056设备!"));			
 			return ;
-		}
-
-		 
-		
-		memset(&DeviceKey, PCI_FIELD_IGNORE, sizeof(PLX_DEVICE_KEY));
+		}		
+		memset(&PD_9056, PCI_FIELD_IGNORE, sizeof(PLX_DEVICE_KEY));
 		i++;
 		rc =
 			PlxPci_DeviceFind(
-				&DeviceKey,
+				&PD_9056,
 				i // Select 1st device matching criteria
 			);
-
 	}
-
-
-
-	
+	MessageBox(_T("没有找到9056设备!"));
 }
 
 
 void Ctest1Dlg::OnBnClickedButton3()
 {
-	CString str;	
-	PLX_STATUS rc;
-	
-	
-
+	 CString str;	
+	PLX_STATUS rc;	
 	rc =
 		PlxPci_DeviceOpen(
 			&PD_9056,
@@ -261,13 +242,13 @@ void Ctest1Dlg::OnBnClickedButton3()
 		);
 	if (rc != ApiSuccess)
 	{
-		MessageBox(_T("未找到设备"));
+		MessageBox(_T("设备不能正常打开"));
 		return;
 		
 	}
 	
-	str.Format(_T("%x"), Device.Key.DeviceId);
-	MessageBox(str);
+	//str.Format(_T("%x"), Device.Key.DeviceId);
+	//MessageBox(str);
 
 	rc = PlxPci_DmaChannelOpen(
 		&Device,
@@ -275,19 +256,13 @@ void Ctest1Dlg::OnBnClickedButton3()
 		NULL // Do not modify current DMA properties
 	);
 	if (rc != PLX_STATUS_OK){
-		str.Format(_T("%d"), rc);
+		str.Format(_T("建立通道失败%d"), rc);
 		//MessageBox(str);
-		MessageBox(_T("建立通道失败"));
+		MessageBox(str);
 		return;
 	}
 	MessageBox(_T("建立通道成功"));
-
-
-	
-	
-	
-
-	
+	 
 }
 
 
@@ -295,25 +270,38 @@ void Ctest1Dlg::OnBnClickedButton4()
 {
 	
 	
-	CString str;
+	 CString str;
 	PLX_STATUS rc;
 	PLX_DMA_PARAMS DmaParams;
 	PLX_PHYSICAL_MEM PciBuffer;
+	void* pBuffer;
 	// Get Common buffer information
 	PlxPci_CommonBufferProperties(
 		&Device,
 		&PciBuffer
 	);
+
+	rc =
+		PlxPci_CommonBufferMap(
+			&Device,
+			&pBuffer
+		);
+	if (rc != PLX_STATUS_OK)
+	{
+		MessageBox(_T("  Unable to map common buffer to user virtual space"));
+		return;
+	}
+	//*(U32*)((U8*)pBuffer + 0x100) = 0x12345678;
+	*(U32*)pBuffer =0x123456789999;
+	
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 	// Fill in DMA transfer parameters
-	DmaParams.ByteCount = 0x1000;
+	DmaParams.ByteCount = 0x0004;
 	
 	// 9000/8311 DMA
 	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
 	DmaParams.LocalAddr = 0x0;
-	DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
-	
- 
+	DmaParams.Direction = PLX_DMA_PCI_TO_LOC;
 
 	rc =
 		PlxPci_DmaTransferBlock(
@@ -335,7 +323,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 	MessageBox(str);
 
 	
-
+	 
 	
 }
 
@@ -357,22 +345,7 @@ void Ctest1Dlg::OnBnClickedButton6()
 }
 
 
-void Ctest1Dlg::OnBnClickedButton5()
-{
-	CString s;
-	U32* p;
-	int address = 0xdf500000;
-	memcpy(&p, &address, 4);
-	MessageBox(s);
 
-	address = 0xdf600000;
-	memcpy(&p, &address, 4);
-	s.Format(_T("%x"), *p);
-	s.Format(_T("0xdf600000数据：%x"), *p);
-
-
-	
-}
 
 
 void Ctest1Dlg::OnBnClickedButton7()
