@@ -64,6 +64,8 @@ void Ctest1Dlg::DoDataExchange(CDataExchange* pDX)
 	//DDX_Control(pDX, IDC_BUTTON1, iii);
 	//DDX_Control(pDX, IDC_EDIT3, iii);
 	DDX_Control(pDX, IDC_EDIT1, bbb);
+	DDX_Control(pDX, IDC_RADIO1, r1);
+	DDX_Control(pDX, IDC_RADIO2, r2);
 }
 
 BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
@@ -115,7 +117,8 @@ BOOL Ctest1Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
-	//iii.SetWindowTextW(_T(""));
+	((CButton*)GetDlgItem(IDC_RADIO1))->SetCheck(TRUE); //选上
+	((CButton*)GetDlgItem(IDC_RADIO2))->SetCheck(FALSE);//
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -299,13 +302,18 @@ void Ctest1Dlg::OnBnClickedButton4()
 	const char* sc = CStringA(s);
 	sscanf_s(sc, "%x", &nValude);
 
-
-	//*(U32*)((U8*)pBuffer + 0x100) = 0x12345678;
 	*(U32*)pBuffer = nValude;
-	
-	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
-	// Fill in DMA transfer parameters
-	DmaParams.ByteCount = 0x0004;
+
+	if (((CButton*)GetDlgItem(IDC_RADIO1))->GetCheck()) {
+		DmaParams.ByteCount = 0x0004;
+	}
+	else {
+		DmaParams.ByteCount = 0x0008;
+		*((U32*)pBuffer+1) = nValude;
+
+	}  
+	 
+	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));  
 	
 	// 9000/8311 DMA
 	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
@@ -328,6 +336,12 @@ void Ctest1Dlg::OnBnClickedButton4()
 			MessageBox(_T(" ERROR - Unable to perform DMA transfer"));
 		}
 	}
+
+
+
+
+
+
 	str.Format(_T("数据传输码:%d"), rc);
 	MessageBox(str);
 

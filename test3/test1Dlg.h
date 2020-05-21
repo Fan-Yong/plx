@@ -45,4 +45,6 @@ public:
 	CEdit bbb;
 	//afx_msg void OnBnClickedButton5();
 	afx_msg void OnBnClickedButton7();
+	CButton r1;
+	CButton r2;
 };
