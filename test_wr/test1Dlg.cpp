@@ -79,6 +79,7 @@ BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON6, &Ctest1Dlg::OnBnClickedButton6)
 	//ON_BN_CLICKED(IDC_BUTTON5, &Ctest1Dlg::OnBnClickedButton5)
 	ON_BN_CLICKED(IDC_BUTTON7, &Ctest1Dlg::OnBnClickedButton7)
+	ON_BN_CLICKED(IDC_BUTTON5, &Ctest1Dlg::OnBnClickedButton5)
 END_MESSAGE_MAP()
 
 
@@ -273,10 +274,31 @@ void Ctest1Dlg::OnBnClickedButton4()
 {
 	
 	
-	 CString str;
+	CString str;
 	PLX_STATUS rc;
 	PLX_DMA_PARAMS DmaParams;
 	PLX_PHYSICAL_MEM PciBuffer;
+	PLX_NOTIFY_OBJECT NotifyObject;
+	PLX_INTERRUPT     PlxInterrupt;
+
+	// Clear interrupt fields
+	memset(&PlxInterrupt, 0, sizeof(PLX_INTERRUPT));
+	// Setup to wait for selected DMA channel
+	PlxInterrupt.DmaDone = 1;
+	rc =
+		PlxPci_NotificationRegisterFor(
+			&Device,
+			&PlxInterrupt,
+			&NotifyObject
+		);
+
+	if (rc != PLX_STATUS_OK)
+	{
+		MessageBox(_T("注册中断事件失败"));
+		return;
+	}
+
+
 	void* pBuffer;
 	// Get Common buffer information
 	PlxPci_CommonBufferProperties(
@@ -311,8 +333,8 @@ void Ctest1Dlg::OnBnClickedButton4()
 		DmaParams.ByteCount = 0x0008;
 		*((U32*)pBuffer+1) = nValude;
 
-	}  
-	 
+	} 
+	
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));  
 	
 	// 9000/8311 DMA
@@ -323,9 +345,9 @@ void Ctest1Dlg::OnBnClickedButton4()
 	rc =
 		PlxPci_DmaTransferBlock(
 			&Device,
-			1, // Channel 0
+			1, // Channel 1
 			&DmaParams, // DMA transfer parameters
-			(1 * 1000) // Specify time to wait for DMA completion
+			(1000) // Specify time to wait for DMA completion
 		);
 	if (rc != PLX_STATUS_OK)
 	{
@@ -334,6 +356,31 @@ void Ctest1Dlg::OnBnClickedButton4()
 		}
 		else {
 			MessageBox(_T(" ERROR - Unable to perform DMA transfer"));
+		}
+	}
+	else {
+
+		rc =
+			PlxPci_NotificationWait(
+				&Device,
+				&NotifyObject,
+				5 * 1000
+			);
+		switch (rc)
+		{
+		case PLX_STATUS_OK:
+			MessageBox(_T(" DMA Int received "));
+			break;
+
+		case PLX_STATUS_TIMEOUT:
+			MessageBox(_T("Timeout waiting for Int Event "));
+
+			break;
+
+		case PLX_STATUS_CANCELED:
+			MessageBox(_T("*ERROR* - Interrupt event cancelled"));
+			break;
+
 		}
 	}
 
@@ -374,21 +421,150 @@ void Ctest1Dlg::OnBnClickedButton6()
 void Ctest1Dlg::OnBnClickedButton7()
 
 {
-	/*CString str;
+	CString str;
 	PLX_STATUS rc;
 
-	rc=PlxPci_DeviceReset(
+	/*rc=PlxPci_DeviceReset(
 		&Device
 	);
 	str.Format(_T("关闭设备码:%d"), rc);
-	MessageBox(str);
-
-	rc = PlxPci_DmaChannelClose(
-		&Device,
-		1 // Channel 1
-	);
-		
-	str.Format(_T("数据通道关闭码:%d"), rc);
 	MessageBox(str);*/
 
+	rc =
+		PlxPci_DmaChannelClose(
+			&Device,
+			1 // Channel 1
+		);
+	if (rc != PLX_STATUS_OK)
+	{
+		// Reset the device if a DMA is in-progress
+		if (rc == PLX_STATUS_IN_PROGRESS)
+		{
+			PlxPci_DeviceReset(
+				&Device
+			);
+			// Attempt to close again
+			PlxPci_DmaChannelClose(
+				&Device,
+				1
+			);
+		}
+	}
+		
+	str.Format(_T("数据通道关闭码:%d"), rc);
+	MessageBox(str);
+
+}
+
+
+void Ctest1Dlg::OnBnClickedButton5()
+{
+	CString str;
+	PLX_STATUS rc;
+	PLX_DMA_PARAMS DmaParams;
+	PLX_PHYSICAL_MEM PciBuffer;
+	PLX_NOTIFY_OBJECT NotifyObject;
+	PLX_INTERRUPT     PlxInterrupt;
+		
+
+	// Clear interrupt fields
+	memset(&PlxInterrupt, 0, sizeof(PLX_INTERRUPT));
+	// Setup to wait for selected DMA channel
+	PlxInterrupt.DmaDone = 1;
+	rc =
+		PlxPci_NotificationRegisterFor(
+			&Device,
+			&PlxInterrupt,
+			&NotifyObject
+		);
+
+	if (rc != PLX_STATUS_OK)
+	{
+		MessageBox(_T("注册中断时间失败"));
+		return;
+	}
+
+	void* pBuffer;
+	// Get Common buffer information
+	PlxPci_CommonBufferProperties(
+		&Device,
+		&PciBuffer
+	);
+
+	rc =
+		PlxPci_CommonBufferMap(
+			&Device,
+			&pBuffer
+		);
+	if (rc != PLX_STATUS_OK)
+	{
+		MessageBox(_T("  Unable to map common buffer to user virtual space"));
+		return;
+	}
+	
+	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
+
+	// 9000/8311 DMA
+	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
+	DmaParams.LocalAddr = 0x0;
+	DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
+	DmaParams.ByteCount = 0x100;
+
+	
+
+
+	rc =
+		PlxPci_DmaTransferBlock(
+			&Device,
+			1, // Channel 1
+			&DmaParams, // DMA transfer parameters
+			0 // Specify time to wait for DMA completion
+		);
+	if (rc != PLX_STATUS_OK)
+	{
+		if (rc == ApiWaitTimeout) {
+			MessageBox(_T("Timed out waiting for DMA completion"));
+		}
+		else {
+			MessageBox(_T(" ERROR - Unable to perform DMA transfer"));
+		}
+
+	}
+	else {
+		U32 nvalue;		
+		nvalue = *(U32*)(pBuffer);
+		
+		
+		rc =
+			PlxPci_NotificationWait(
+				&Device,
+				&NotifyObject,
+				5 * 1000
+			);
+		switch (rc)
+		{
+		case PLX_STATUS_OK:
+			MessageBox(_T(" DMA Int received "));
+			break;
+
+		case PLX_STATUS_TIMEOUT:
+			MessageBox(_T("Timeout waiting for Int Event "));
+			
+			break;
+
+		case PLX_STATUS_CANCELED:			
+			MessageBox(_T("*ERROR* - Interrupt event cancelled"));
+			break;
+
+		default:	
+			
+			
+			MessageBox(_T("*ERROR* - API failed"));
+			break;
+		}
+
+	}
+
+	str.Format(_T("数据传输码:%d"), rc);
+	MessageBox(str);
 }
