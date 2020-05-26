@@ -316,6 +316,8 @@ void Ctest1Dlg::OnBnClickedButton4()
 		MessageBox(_T("  Unable to map common buffer to user virtual space"));
 		return;
 	}
+	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
+
 	
 	//获取对话框数据
 	CString s;
@@ -335,7 +337,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 
 	} 
 	
-	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));  
+	  
 	
 	// 9000/8311 DMA
 	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
@@ -506,12 +508,12 @@ void Ctest1Dlg::OnBnClickedButton5()
 
 	// 9000/8311 DMA
 	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
-	DmaParams.LocalAddr = 0x0;
-	DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
-	DmaParams.ByteCount = 0x100;
-
 	
 
+	DmaParams.LocalAddr = 0x0;
+	DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
+	DmaParams.ByteCount = 0x100;   
+	 
 
 	rc =
 		PlxPci_DmaTransferBlock(
@@ -530,10 +532,7 @@ void Ctest1Dlg::OnBnClickedButton5()
 		}
 
 	}
-	else {
-		U32 nvalue;		
-		nvalue = *(U32*)(pBuffer);
-		
+	else {	
 		
 		rc =
 			PlxPci_NotificationWait(
@@ -564,6 +563,13 @@ void Ctest1Dlg::OnBnClickedButton5()
 		}
 
 	}
+	U32 nvalue;
+	nvalue = *(U32*)(pBuffer);
+	CString s;
+	//const char* sc = CStringA(s);
+	//sscanf_s(sc, "%x", &nvalue);
+	s.Format(_T("转到的数据:%x"), nvalue);
+	MessageBox(s);
 
 	str.Format(_T("数据传输码:%d"), rc);
 	MessageBox(str);
