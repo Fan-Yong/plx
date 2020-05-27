@@ -172,6 +172,10 @@ HCURSOR Ctest1Dlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+U32 Ctest1Dlg::swap_endian(U32 val) {
+	val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF);
+	return (val << 16) | (val >> 16);
+}
 
 
 void Ctest1Dlg::OnBnClickedButton1()
@@ -281,6 +285,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 	PLX_NOTIFY_OBJECT NotifyObject;
 	PLX_INTERRUPT     PlxInterrupt;
 
+	/*
 	// Clear interrupt fields
 	memset(&PlxInterrupt, 0, sizeof(PLX_INTERRUPT));
 	// Setup to wait for selected DMA channel
@@ -297,7 +302,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 		MessageBox(_T("注册中断事件失败"));
 		return;
 	}
-
+	*/
 
 	void* pBuffer;
 	// Get Common buffer information
@@ -319,13 +324,13 @@ void Ctest1Dlg::OnBnClickedButton4()
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 
 	
-	//获取对话框数据
+	/*//获取对话框数据
 	CString s;
 	bbb.GetWindowTextW(s);
 	U32 nValude;
 	const char* sc = CStringA(s);
 	sscanf_s(sc, "%x", &nValude);
-
+U32 nValude;
 	*(U32*)pBuffer = nValude;
 
 	if (((CButton*)GetDlgItem(IDC_RADIO1))->GetCheck()) {
@@ -335,15 +340,23 @@ void Ctest1Dlg::OnBnClickedButton4()
 		DmaParams.ByteCount = 0x0008;
 		*((U32*)pBuffer+1) = nValude;
 
-	} 
+	} */
+	//const char src[160] = "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+	U32 src[40];
+	for (int i = 0; i < 40; i++) {
+		src[i] = swap_endian(0x12345678);
+		 
+	}	
+	memcpy(pBuffer, src, 160);  
 	
-	  
-	
+	 
+
+	DmaParams.ByteCount = 0x00A4;
 	// 9000/8311 DMA
 	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
-	DmaParams.LocalAddr = 0x0;
+	DmaParams.LocalAddr = 0x040;
 	DmaParams.Direction = PLX_DMA_PCI_TO_LOC;
-
+	
 	rc =
 		PlxPci_DmaTransferBlock(
 			&Device,
@@ -362,11 +375,11 @@ void Ctest1Dlg::OnBnClickedButton4()
 	}
 	else {
 
-		rc =
+		/*rc =
 			PlxPci_NotificationWait(
 				&Device,
 				&NotifyObject,
-				5 * 1000
+				1 * 1000
 			);
 		switch (rc)
 		{
@@ -383,7 +396,7 @@ void Ctest1Dlg::OnBnClickedButton4()
 			MessageBox(_T("*ERROR* - Interrupt event cancelled"));
 			break;
 
-		}
+		}*/
 	}
 
 
@@ -467,6 +480,40 @@ void Ctest1Dlg::OnBnClickedButton5()
 	PLX_PHYSICAL_MEM PciBuffer;
 	PLX_NOTIFY_OBJECT NotifyObject;
 	PLX_INTERRUPT     PlxInterrupt;
+	PLX_DMA_PROP      DmaProp;
+	
+	
+	// Get Common buffer information
+	PlxPci_CommonBufferProperties(
+		&Device,
+		&PciBuffer
+	);
+
+	// Clear DMA structure
+	/*memset(&DmaProp, 0, sizeof(PLX_DMA_PROP));
+
+	// Initialize the DMA channel
+	DmaProp.LocalBusWidth = 3;   // 32-bit
+	DmaProp.ReadyInput = 1;
+
+	
+	rc =
+		PlxPci_DmaChannelOpen(
+			&Device,
+			1,
+			&DmaProp
+		);
+
+	if (rc == PLX_STATUS_OK)
+	{
+		
+	}
+	else
+	{
+		MessageBox(_T("打开通道失败"));
+		return;
+	}*/
+	
 		
 
 	// Clear interrupt fields
@@ -482,38 +529,23 @@ void Ctest1Dlg::OnBnClickedButton5()
 
 	if (rc != PLX_STATUS_OK)
 	{
-		MessageBox(_T("注册中断时间失败"));
+		MessageBox(_T("注册中断事件失败"));
 		return;
 	}
 
-	void* pBuffer;
-	// Get Common buffer information
-	PlxPci_CommonBufferProperties(
-		&Device,
-		&PciBuffer
-	);
-
-	rc =
-		PlxPci_CommonBufferMap(
-			&Device,
-			&pBuffer
-		);
-	if (rc != PLX_STATUS_OK)
-	{
-		MessageBox(_T("  Unable to map common buffer to user virtual space"));
-		return;
-	}
 	
+
+
 	memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 
 	// 9000/8311 DMA
-	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
+	DmaParams.PciAddr = PciBuffer.PhysicalAddr; 
 	
 
-	DmaParams.LocalAddr = 0x0;
+	DmaParams.LocalAddr = 0x0300;
 	DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
-	DmaParams.ByteCount = 0x100;   
-	 
+	DmaParams.ByteCount = 0x004;   
+	
 
 	rc =
 		PlxPci_DmaTransferBlock(
@@ -563,14 +595,28 @@ void Ctest1Dlg::OnBnClickedButton5()
 		}
 
 	}
-	U32 nvalue;
-	nvalue = *(U32*)(pBuffer);
-	CString s;
-	//const char* sc = CStringA(s);
-	//sscanf_s(sc, "%x", &nvalue);
-	s.Format(_T("转到的数据:%x"), nvalue);
-	MessageBox(s);
 
+	void* pBuffer;
+	rc =
+		PlxPci_CommonBufferMap(
+			&Device,
+			&pBuffer
+		);
+	if (rc != PLX_STATUS_OK)
+	{
+		MessageBox(_T("  Unable to map common buffer to user virtual space"));
+		return;
+	}
+	
+	U8 nvalue;
+	CString s1;
+	CString s2;
+
+	nvalue = *(U32*)(pBuffer);	
+	s1.Format(_T("%x"), nvalue);	
+	nvalue = *(U32*)((U32*)pBuffer+1);
+	s2.Format(_T("%x"), nvalue);
+	MessageBox(s1+":"+s2);
 	str.Format(_T("数据传输码:%d"), rc);
 	MessageBox(str);
 }

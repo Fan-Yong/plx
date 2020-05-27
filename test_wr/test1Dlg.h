@@ -34,6 +34,7 @@ protected:
 public:
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
+	U32 swap_endian(U32 val);
 	PLX_DEVICE_KEY PD_9056;
 	PLX_DEVICE_OBJECT Device;	
 	CEdit DL;
