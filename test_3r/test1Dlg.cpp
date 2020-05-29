@@ -515,7 +515,7 @@ void Ctest1Dlg::OnBnClickedButton5()
 
 	}
 
-	sscanf_s(sc, "%d", &nbyte);
+	sscanf_s(sc, "%x", &nbyte);
 	sscanf_s(sc, "%x", &n);
 
 
