@@ -487,10 +487,23 @@ void Ctest1Dlg::OnBnClickedButton5()
 	PLX_NOTIFY_OBJECT NotifyObject;
 
 	int ninput = 1;
-	U32 nbyte = 0x10;
-	int n = 16;
+	U32 nbyte = 0x20;
+	int n = 32;
 	DmaChannel = 1;
 	LocalAddress = 0x44;
+
+
+	rc =
+		PlxPci_DeviceOpen(
+			&PD_9056,
+			&Device
+		);
+	if (rc != ApiSuccess)
+	{
+		MessageBox(_T("设备不能正常打开"));
+		return;
+
+	}
 	
 	
 	//第一步 建立通道-------------------------------------------------------------------------
@@ -520,7 +533,7 @@ void Ctest1Dlg::OnBnClickedButton5()
 	else
 	{
 		MessageBox(_T("建立通道失败"));	
-		return;
+		goto label2;
 	}
 	//第一步 建立通道完毕-------------------------------------------------------------------------
 	
@@ -599,7 +612,7 @@ void Ctest1Dlg::OnBnClickedButton5()
 				CString s2;
 				s2 = "";
 				for (int i = 0; i < 32; i++) {
-					nvalue = *(U32*)((U32*)pUserBuffer + i);
+					nvalue = *(U8*)((U8*)pUserBuffer + i);
 					s1.Format(_T("%x"), nvalue);
 					s2.Append(s1 + ",");
 
@@ -642,7 +655,7 @@ void Ctest1Dlg::OnBnClickedButton5()
 	}
 
 	// Close DMA Channel
-	
+label2:
 	rc =
 		PlxPci_DmaChannelClose(
 			&Device,
@@ -662,6 +675,20 @@ void Ctest1Dlg::OnBnClickedButton5()
 	// Release user buffer
 	if (pUserBuffer != NULL)
 		free(pUserBuffer);
+
+
+	CString s1;
+	rc=PlxPci_DeviceReset(
+		&Device
+	);
+	if (rc == PLX_STATUS_OK)
+	{
+		//MessageBox(_T("关闭通道成功"));
+	}
+	else {
+		s1.Format(_T("关闭设备码:%d"), rc);
+		MessageBox(s1);
+	}
 }
 
 
