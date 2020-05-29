@@ -80,6 +80,7 @@ BEGIN_MESSAGE_MAP(Ctest1Dlg, CDialogEx)
 	//ON_BN_CLICKED(IDC_BUTTON5, &Ctest1Dlg::OnBnClickedButton5)
 	ON_BN_CLICKED(IDC_BUTTON7, &Ctest1Dlg::OnBnClickedButton7)
 	ON_BN_CLICKED(IDC_BUTTON5, &Ctest1Dlg::OnBnClickedButton5)
+	//ON_NOTIFY(TCN_SELCHANGE, IDC_TAB1, &Ctest1Dlg::OnTcnSelchangeTab1)
 END_MESSAGE_MAP()
 
 
@@ -602,7 +603,7 @@ void Ctest1Dlg::OnBnClickedButton5()
 			if (rc != PLX_STATUS_OK)
 			{
 
-				MessageBox(_T("*ERROR* - NotificationStatus failed\ "));
+				MessageBox(_T("*ERROR* - NotificationStatus failed"));
 			}
 			else {
 
@@ -690,5 +691,8 @@ label2:
 		MessageBox(s1);
 	}
 }
+
+
+
 
 

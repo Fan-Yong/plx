@@ -49,4 +49,5 @@ public:
 	CButton r1;
 	CButton r2;
 	afx_msg void OnBnClickedButton5();
+	afx_msg void OnTcnSelchangeTab1(NMHDR* pNMHDR, LRESULT* pResult);
 };
