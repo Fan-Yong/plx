@@ -360,6 +360,11 @@ PerformDma_9000(
     PLX_PHYSICAL_MEM  PciBuffer;
     PLX_NOTIFY_OBJECT NotifyObject;
 
+    int ninput=0;
+    U32 nbyte = 0x10;
+    int n = 16;
+
+
 
     Cons_printf(
         "Description:\n"
@@ -407,7 +412,8 @@ PerformDma_9000(
 
 
     DmaProp.LocalBusWidth = 1;
-    DmaProp.ReadyInput = 1;
+    DmaProp.ReadyInput = ninput;
+    
     DmaProp.Burst = 1;
     DmaProp.BurstInfinite = 1;
     DmaProp.DoneInterrupt = 1;
@@ -461,15 +467,17 @@ PerformDma_9000(
     }
 
 
+
+    /*
+
     // Transfer the Data
     Cons_printf("  Perform Block DMA transfer..... ");
-
-    // Clear DMA data
+     // Clear DMA data
     memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 
     DmaParams.PciAddr   = PciBuffer.PhysicalAddr;
     DmaParams.LocalAddr = LocalAddress;
-    DmaParams.ByteCount = 0x10;
+    DmaParams.ByteCount = 0x20;
     DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
 
     rc =
@@ -529,7 +537,7 @@ PerformDma_9000(
         }
         else {
             U8 nvalue;
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i <32; i++) {
                 nvalue = *(U8*)((U8*)pBuffer + i);
                 Cons_printf("%x,", nvalue);
 
@@ -575,19 +583,36 @@ PerformDma_9000(
         PlxSdkErrorDisplay(rc);
     }
 
+
+
+    return;*/
+
    
     // Transfer a user-mode buffer using DMA
     Cons_printf("  Transfer a user-mode buffer.... ");
 
     // Allocate a buffer
-    pUserBuffer = malloc(0x10);
+    pUserBuffer = malloc(nbyte);
+    Cons_printf("-----------------------------------------\n");
+    U8 nvalue;
+
+    for (int i = 0; i < n; i++) {
+
+
+        nvalue = *(U8*)((U8*)pUserBuffer + i);
+        Cons_printf("%x,", nvalue);
+
+
+    }
+    Cons_printf("\n");
+    Cons_printf("-----------------------------------------\n");
 
     // Clear DMA data
     memset(&DmaParams, 0, sizeof(PLX_DMA_PARAMS));
 
     DmaParams.UserVa    = (PLX_UINT_PTR)pUserBuffer;
     DmaParams.LocalAddr = LocalAddress;
-    DmaParams.ByteCount = 0x10;
+    DmaParams.ByteCount = 0x20;
     DmaParams.Direction = PLX_DMA_LOC_TO_PCI;
 
     rc =
@@ -646,9 +671,10 @@ PerformDma_9000(
     }
     //add by fanyong 20200528
      //--------------------------------------------------------------------------------
-    U8 nvalue;
+    Cons_printf("-----------------------------------------\n");
+    //U8 nvalue;
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < n; i++) {
 
 
         nvalue = *(U8*)((U8*)pUserBuffer + i);
@@ -658,7 +684,7 @@ PerformDma_9000(
     }
     Cons_printf("\n");
     Cons_printf("-----------------------------------------\n");
-    Cons_printf("-----------------------------------------\n");
+    
     //---------------------------------------------------------------------------------------
     // Release user buffer
     if (pUserBuffer != NULL)
