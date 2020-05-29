@@ -207,7 +207,7 @@ void Ctest1Dlg::OnBnClickedButton2()
 	CString s1;
 	
 	
-	memset(&PD_9056, PCI_FIELD_IGNORE, sizeof(PD_9056));
+	memset(&PD_9056, PCI_FIELD_IGNORE, sizeof(PLX_DEVICE_KEY));
 	rc =
 		PlxPci_DeviceFind(
 			&PD_9056,
@@ -654,7 +654,7 @@ void Ctest1Dlg::OnBnClickedButton5()
 	{
 		//s1.Format(_T(" 关闭通知 成功"));
 	}
-
+	
 	// Close DMA Channel
 label2:
 	rc =
@@ -677,14 +677,14 @@ label2:
 	if (pUserBuffer != NULL)
 		free(pUserBuffer);
 
-
+	
 	CString s1;
-	rc=PlxPci_DeviceReset(
+	rc= PlxPci_DeviceClose(
 		&Device
 	);
 	if (rc == PLX_STATUS_OK)
 	{
-		//MessageBox(_T("关闭通道成功"));
+		//MessageBox(_T("关闭设备成功"));
 	}
 	else {
 		s1.Format(_T("关闭设备码:%d"), rc);
