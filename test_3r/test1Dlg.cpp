@@ -257,15 +257,29 @@ void Ctest1Dlg::OnBnClickedButton3()
 		return;
 		
 	}
+	PLX_DMA_PROP      DmaProp;
+	DmaProp.LocalBusWidth = 1;
+	DmaProp.ReadyInput = 1;
+
+	DmaProp.Burst = 1;
+	DmaProp.BurstInfinite = 1;
+	DmaProp.DoneInterrupt = 1;
+	DmaProp.RouteIntToPci = 1;
 	
-	//str.Format(_T("%x"), Device.Key.DeviceId);
-	//MessageBox(str);
 
 	rc = PlxPci_DmaChannelOpen(
 		&Device,
 		1, // Channel 0
-		NULL // Do not modify current DMA properties
+		&DmaProp // Do not modify current DMA properties
 	);
+
+	/*rc = PlxPci_DmaChannelOpen(
+		&Device,
+		1, // Channel 0
+		NULL // Do not modify current DMA properties
+	);*/
+
+
 	if (rc != PLX_STATUS_OK){
 		str.Format(_T("建立通道失败%d"), rc);
 		//MessageBox(str);
@@ -354,7 +368,7 @@ U32 nValude;
 	
 	 
 
-	DmaParams.ByteCount = 0x00A4;
+	DmaParams.ByteCount = 0x00A0;
 	// 9000/8311 DMA
 	DmaParams.PciAddr = PciBuffer.PhysicalAddr;
 	DmaParams.LocalAddr = 0x040;
@@ -472,6 +486,19 @@ void Ctest1Dlg::OnBnClickedButton7()
 	str.Format(_T("数据通道关闭码:%d"), rc);
 	MessageBox(str);
 
+	CString s1;
+	rc = PlxPci_DeviceClose(
+		&Device
+	);
+	if (rc == PLX_STATUS_OK)
+	{
+		//MessageBox(_T("关闭设备成功"));
+	}
+	else {
+		s1.Format(_T("关闭设备码:%d"), rc);
+		MessageBox(s1);
+	}
+
 }
 
 
@@ -537,7 +564,7 @@ void Ctest1Dlg::OnBnClickedButton5()
 	// Clear DMA structure
 	memset(&DmaProp, 0, sizeof(PLX_DMA_PROP));
 
-	DmaProp.LocalBusWidth = 1;
+	DmaProp.LocalBusWidth =1;
 	DmaProp.ReadyInput = ninput;
 
 	DmaProp.Burst = 1;
